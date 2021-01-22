@@ -22,7 +22,8 @@ int main(void)
 	ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     srand (time(NULL));
-    int N = rand() % 100 + 1, M = rand() % 500 + 1;
+    // int N = rand() % 100 + 1, M = rand() % 500 + 1;
+    int N = 100, M = 500;
     fstream out_stream;
     out_stream.open("in.txt", ios::out);
     M = min(M, (N * ( N - 1)) / 2);

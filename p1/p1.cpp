@@ -28,11 +28,10 @@ int main( int argc, char **argv ) {
             This is the root process 
             Read input and distribute it to all the processes.
         */
-        fstream input_file, output_file;
-        input_file.open("in.txt", ios::in);
-
-        input_file >> N;
-        input_file.close();
+        fstream infile;
+        infile.open(argv[1], ios::in);
+        infile >> N;
+        infile.close();
     }
 
     MPI_Bcast(&N,1,MPI_INT,root_rank,MPI_COMM_WORLD);
@@ -48,7 +47,13 @@ int main( int argc, char **argv ) {
     
     MPI_Reduce(&partial_value, &estimated_value, 1, MPI_DOUBLE, MPI_SUM, root_rank, MPI_COMM_WORLD);
     if(rank == root_rank) {
-        cout << fixed << setprecision(6) << estimated_value << "\n";
+    	// ofstream out(argv[2]);
+   	 // 	streambuf *coutbuf = cout.rdbuf();
+    	// cout.rdbuf(out.rdbuf());
+    	fstream outfile;
+    	outfile.open(argv[2], ios::out);
+        outfile << fixed << setprecision(6) << estimated_value << "\n";
+        outfile.close();
     }
     
     MPI_Barrier( MPI_COMM_WORLD );

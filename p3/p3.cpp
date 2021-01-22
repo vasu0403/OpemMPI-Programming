@@ -9,7 +9,8 @@ using namespace std;
 typedef long long int ll;
 
 const int root_rank = 0;
-int adj[101][101];
+int adj[501][501];
+int available_colors[501][501], color[501];
 int main( int argc, char **argv ) {
     int rank, numprocs;
 
@@ -23,51 +24,56 @@ int main( int argc, char **argv ) {
     MPI_Barrier( MPI_COMM_WORLD );
     double tbeg = MPI_Wtime();
     int N, M;
-
     if(rank == 0) {
-        ifstream in(argv[1]);
-        streambuf *cinbuf = cin.rdbuf();
-        cin.rdbuf(in.rdbuf());
+        fstream in_file;
+        in_file.open(argv[1], ios::in);
 
-        cin >> N >> M;
+        in_file >> N >> M;
+        vector<pair<ll, ll>> edges(M);
         for(int i = 0, u, v; i < M; i++) {
-            cin >> u >> v;
-            adj[u][v] = 1;
-            adj[v][u] = 1;
+            in_file >> u >> v;
+            edges[i].first = u;
+            edges[i].second = v;
+        }
+        for(int i = 0; i < M; i++) {
+            for(int j = i + 1; j < M; j++) {
+                if(edges[i].first == edges[j].first || edges[i].first == edges[j].second || edges[i].second == edges[j].first || edges[i].second == edges[j].second) {
+                    adj[i + 1][j + 1] = 1;
+                    adj[j + 1][i + 1] = 1;
+                }
+            }
         }
     }
 
-    MPI_Bcast(&N, 1, MPI_INT, root_rank, MPI_COMM_WORLD);
-    MPI_Bcast(adj, 101 * 101, MPI_INT, root_rank, MPI_COMM_WORLD);
-    int available_colors[101][101], color[101];
-    for(int i = 0; i <= N; i++) {
+    MPI_Bcast(&M, 1, MPI_INT, root_rank, MPI_COMM_WORLD);
+    MPI_Bcast(adj, 501 * 501, MPI_INT, root_rank, MPI_COMM_WORLD);
+    for(int i = 0; i <= M; i++) {
         color[i] = -1;
-        for(int j = 0; j <= N; j++) {
+        for(int j = 0; j <= M; j++) {
             available_colors[i][j] = 1;
         }
     }
-    int per_process = N / numprocs;
-    int left_over = N % numprocs;
+    int per_process = M / numprocs;
+    int left_over = M % numprocs;
 
     int start_node = rank*per_process + min(left_over, rank) + 1;
     int end_node = start_node + per_process + (rank < left_over ? 1 : 0) - 1;
-
     int nodes_colored = 0;
-    while(nodes_colored != N) {
+    while(nodes_colored != M) {
         vector<pair<int, int>> color_these_nodes;
-        for(int i = start_node; i <= end_node && i <= N; i++) {
+        for(int i = start_node; i <= end_node && i <= M; i++) {
             if(color[i] != -1) {
                 continue;
             }
             bool can_color = true;
-            for(int j = 100; j > i; j--) {
+            for(int j = M; j > i; j--) {
                 if(adj[i][j] && color[j] == -1) {
                     can_color = false;
                     break;
                 }
             }
             if(can_color) {
-                for(int j = 1; j <= N; j++) {
+                for(int j = 1; j <= M; j++) {
                     if(available_colors[i][j]) {
                         color[i] = j;
                         color_these_nodes.push_back({i, j});
@@ -98,7 +104,7 @@ int main( int argc, char **argv ) {
                 int node = received_data[i][0];
                 int remove_color = received_data[i][1];
                 color[node] = remove_color;
-                for(int j = 1; j <= 100; j++) {
+                for(int j = 0; j <= 500; j++) {
                     if(adj[node][j]) {
                         available_colors[j][remove_color] = 0;
                     }
@@ -107,18 +113,18 @@ int main( int argc, char **argv ) {
         }
     }
     
-    ofstream out(argv[2]);
-    streambuf *coutbuf = cout.rdbuf();
-    cout.rdbuf(out.rdbuf());
     if(rank == root_rank) {
+        fstream out_file;
+        out_file.open(argv[2], ios::out);
         set<int> s;
-        for(int i = 1; i <= N; i++) {
+        for(int i = 1; i <= M; i++) {
             s.insert(color[i]);
         }
-        cout << s.size() << "\n";
-        for(int i = 1; i <= N; i++) {
-            cout << color[i] << " ";
-        } cout << "\n";
+        out_file << s.size() << "\n";
+        for(int i = 1; i <= M; i++) {
+            out_file << color[i] << " ";
+        } out_file << "\n";
+        out_file.close();
     }
 
     MPI_Barrier( MPI_COMM_WORLD );

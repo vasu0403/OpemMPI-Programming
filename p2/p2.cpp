@@ -38,7 +38,6 @@ void quick_sort(int arr[], int l, int r) {
 };
 void k_way_merge(int left_index[], int right_index[], int numprocs, int N, char *file) {
 	priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
-    freopen(file, "w", stdout);
 	for(int i = 0; i < numprocs; i++) {
 		if(left_index[i] <= right_index[i] != 0) {
 			pq.push({sorted_segments[left_index[i]], i});
@@ -58,10 +57,11 @@ void k_way_merge(int left_index[], int right_index[], int numprocs, int N, char 
 		}
 	}
 	fstream out_file;
+    out_file.open(file, ios::out);
 	for(int i = 0; i < N; i++) {
-		printf("%d ", sorted_array[i]);
+        out_file << sorted_array[i] << " ";
 	}
-    printf("\n");
+    out_file.close();
 
 }
 int main( int argc, char **argv ) {
@@ -81,11 +81,13 @@ int main( int argc, char **argv ) {
     int N;
     if(rank == root_rank) {
         /* root process. Read the input. */
-        freopen(argv[1], "r", stdin);
-        scanf("%d", &N);
+        fstream infile;
+        infile.open(argv[1]);
+        infile >> N;
         for(int i = 0; i < N; i++) {
-            scanf("%d", &unsorted_array[i]);
+            infile >> unsorted_array[i];
         }
+        infile.close();
         /* broadcast the size of entire array to each process. */
         MPI_Bcast(&N, 1, MPI_INT, root_rank, MPI_COMM_WORLD);
 
