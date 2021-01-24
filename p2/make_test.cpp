@@ -22,7 +22,8 @@ int main(void)
 	ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     srand (time(NULL));
-    int N = 100000;
+    // int N = rand() % 1000000 + 1;
+    int N = 1000000;
     vector<ll> v(N);
     for(int i = 0; i < N; i++) {
     	v[i] = rand() % 1000000000;
@@ -34,10 +35,5 @@ int main(void)
     for(int i = 0; i < N; i++) {
     	in_file << v[i] << " ";
     }
-    sort(all(v));
-    for(int i = 0; i < N; i++) {
-    	ans << v[i] << " ";
-    }
-    ans.close();
     in_file.close();
 }
